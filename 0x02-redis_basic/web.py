@@ -11,56 +11,25 @@ from functools import wraps
 conn = Redis()
 
 
-def count_calls(method: Callable) -> Callable:
-    """Decorator to count the number of calls to a function.
-
-    :param method: The method to decorate.
-    :type method: Callable
-    :return: The wrapper function.
-    :rtype: Callable
+def data_cacher(method: Callable) -> Callable:
+    """Decorator to cache the output of a method.
     """
     @wraps(method)
-    def wrapper(url: str) -> str:
-        """Wrapper function to count the number of calls to a function.
-
-        :param url: The URL of the page.
-        :type url: str
-        :return: The content of the page.
-        :rtype: str
+    def invoker(url) -> str:
+        """Invokes the given method after caching its output.
         """
-        conn.incr(f"count:{url}")
-        return method(url)
-    return wrapper
+        conn.incr(f'count:{url}')
+        result = conn.get(f'result:{url}')
+        if result:
+            return result.decode('utf-8')
+        result = method(url)
+        conn.set(f'count:{url}', 0)
+        conn.setex(f'result:{url}', 10, result)
+        return result
+    return invoker
 
 
-def cache(time: int) -> Callable:
-    """Decorator to cache the result of a function.
-
-    :param time: The time in seconds to store the result.
-    :type time: int
-    :return: The decorator function.
-    :rtype: Callable
-    """
-    def cache_url(method: Callable) -> Callable:
-        """Decorator to cache the result of a function.
-        """
-        @wraps(method)
-        def wrapper(url: str) -> str:
-            """Wrapper function to cache the result of a function.
-            """
-            key = f"cache:{url}"
-            page = conn.get(key)
-            if not page:
-                page = method(url)
-                conn.setex(key, time, page)
-                return page
-            return page.decode('utf-8')
-        return wrapper
-    return cache_url
-
-
-@count_calls
-@cache(10)
+@data_cacher
 def get_page(url: str) -> str:
     """
     Get the content of a web page.
