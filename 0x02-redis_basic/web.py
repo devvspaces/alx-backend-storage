@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 """Implementing an expiring web cache and tracker
 """
 
@@ -9,6 +8,8 @@ import requests
 from functools import wraps
 
 conn = Redis()
+"""The module-level Redis instance.
+"""
 
 
 def data_cacher(method: Callable) -> Callable:
@@ -31,12 +32,6 @@ def data_cacher(method: Callable) -> Callable:
 
 @data_cacher
 def get_page(url: str) -> str:
-    """
-    Get the content of a web page.
-
-    :param url: The URL of the page.
-    :type url: str
-    :return: The content of the page.
-    :rtype: str
+    """Get the content of a web page.
     """
     return requests.get(url).text
