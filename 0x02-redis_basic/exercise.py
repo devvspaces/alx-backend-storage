@@ -46,7 +46,10 @@ def call_history(method: Callable) -> Callable:
         :rtype: Any
         """
         if isinstance(self._redis, redis.Redis):
-            value = str(tuple([i.decode('utf-8') if type(i) == bytes else i for i in args]))
+            value = str(
+                tuple([
+                    i.decode('utf-8') if type(i) == bytes else i for i in args
+                ]))
             self._redis.rpush(f'{method.__qualname__}:inputs', value)
         result = method(self, *args, **kwargs)
         self._redis.rpush(f'{method.__qualname__}:outputs', result)
@@ -71,7 +74,8 @@ def replay(method: Callable) -> None:
         inputs_list = cache._redis.lrange(inputs, 0, -1)
         outputs_list = cache._redis.lrange(outputs, 0, -1)
         for i, o in zip(inputs_list, outputs_list):
-            print(f'{method_name}(*{i.decode("utf-8")}) -> {o.decode("utf-8")}')
+            print(f'{method_name}\
+(*{i.decode("utf-8")}) -> {o.decode("utf-8")}')
 
 
 class Cache:
