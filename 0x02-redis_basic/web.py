@@ -53,13 +53,14 @@ def cache(time: int) -> Callable:
             if not page:
                 page = method(url)
                 conn.setex(key, time, page)
-            return page
+                return page
+            return page.decode('utf-8')
         return wrapper
     return cache_url
 
 
-@cache(10)
 @count_calls
+@cache(10)
 def get_page(url: str) -> str:
     """
     Get the content of a web page.

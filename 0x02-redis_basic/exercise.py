@@ -9,10 +9,10 @@ from functools import wraps
 import redis
 
 
-def count_calls(fn: Callable) -> Callable:
+def count_calls(method: Callable) -> Callable:
     """Decorator to count the number of calls to a function.
     """
-    @wraps(fn)
+    @wraps(method)
     def wrapper(self: Type['Cache'], *args, **kwargs) -> Any:
         """Wrapper function to count the number of calls to a function.
 
@@ -21,8 +21,8 @@ def count_calls(fn: Callable) -> Callable:
         :return: The result of the function.
         :rtype: Any
         """
-        self._redis.incr(fn.__qualname__)
-        return fn(self, *args, **kwargs)
+        self._redis.incr(method.__qualname__)
+        return method(self, *args, **kwargs)
     return wrapper
 
 
