@@ -5,8 +5,8 @@ Cache store
 
 from typing import Any, Callable, Type, Union
 from uuid import uuid4
-from redis import Redis
 from functools import wraps
+import redis
 
 
 def count_calls(fn: Callable) -> Callable:
@@ -45,7 +45,7 @@ def call_history(method: Callable) -> Callable:
         :return: The result of the function.
         :rtype: Any
         """
-        if isinstance(self._redis, Redis):
+        if isinstance(self._redis, redis.Redis):
             value = str(tuple([i.decode('utf-8') if type(i) == bytes else i for i in args]))
             self._redis.rpush(f'{method.__qualname__}:inputs', value)
         result = method(self, *args, **kwargs)
@@ -65,7 +65,7 @@ def replay(method: Callable) -> None:
     inputs = method_name + ':inputs'
     outputs = method_name + ':outputs'
     cache = method.__self__
-    if isinstance(cache._redis, Redis):
+    if isinstance(cache._redis, redis.Redis):
         count = cache.get_str(method_name)
         print(f'{method_name} was called {count} times:')
         inputs_list = cache._redis.lrange(inputs, 0, -1)
@@ -81,7 +81,7 @@ class Cache:
     def __init__(self) -> None:
         """Initialize the Cache instance.
         """
-        self._redis = Redis()
+        self._redis = redis.Redis()
         self._redis.flushdb(True)
 
     @call_history
