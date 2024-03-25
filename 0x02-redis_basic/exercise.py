@@ -10,20 +10,16 @@ import redis
 
 
 def count_calls(method: Callable) -> Callable:
-    """Decorator to count the number of calls to a function.
-    """
+    '''Tracks the number of calls made to a method in a Cache class.
+    '''
     @wraps(method)
-    def wrapper(self: Type['Cache'], *args, **kwargs) -> Any:
-        """Wrapper function to count the number of calls to a function.
-
-        :param self: The Cache instance.
-        :type self: Cache
-        :return: The result of the function.
-        :rtype: Any
-        """
-        self._redis.incr(method.__qualname__)
+    def invoker(self, *args, **kwargs) -> Any:
+        '''Invokes the given method after incrementing its call counter.
+        '''
+        if isinstance(self._redis, redis.Redis):
+            self._redis.incr(method.__qualname__)
         return method(self, *args, **kwargs)
-    return wrapper
+    return invoker
 
 
 def call_history(method: Callable) -> Callable:
